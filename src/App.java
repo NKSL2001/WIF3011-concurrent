@@ -1,9 +1,12 @@
-import java.util.ArrayList;
-import java.util.List;
 
+import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+// ArrayList, List
 public class App {
 
     static volatile List<String> processed = new ArrayList<>();
+    static AtomicBoolean isReading = new AtomicBoolean(true);
 
     public static void main(String[] args) throws Exception {
         // Sequential
@@ -18,8 +21,8 @@ public class App {
         System.out.println("\n".repeat(10));
 
         // Concurrent #1: via Runnable
-        ReadFile readFile = new ReadFile(processed);
-        CountBOW countBOW = new CountBOW(processed);
+        ReadFile readFile = new ReadFile(processed, isReading);
+        CountBOW countBOW = new CountBOW(processed, isReading);
 
         Thread readThread = new Thread(readFile);
         Thread countThread = new Thread(countBOW);

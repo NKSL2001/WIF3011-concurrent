@@ -1,23 +1,41 @@
-import java.util.List;
 
+import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+// ArrayList, List
 public class CountBOW implements Runnable {
 
-    private volatile List<String> processed;
+    private volatile List<String> processed = new ArrayList<>();
+    private List<String> stored = new ArrayList<>();
+    private AtomicBoolean isReading;
 
-    public CountBOW(List<String> processed) {
+    public CountBOW(List<String> processed, AtomicBoolean isReading) {
         this.processed = processed;
+        this.isReading = isReading;
     }
 
     @Override
     public void run() {
-        System.out.println("countThread running"); // test msg
-        while (processed != null) {
-            System.out.println(processed);
-            processed.remove(0);
-            // wait readfile to send data to arraylist first
-            Thread.yield();
+        while (isReading.get()) {
+            try {
+                // wait in queue to prevent ConcurrentModificationException
+                Thread.sleep(25);
+                Thread.yield();
+                // show what is processed per line
+                if (!processed.isEmpty()) {
+                    System.out.println(processed);
+                }
+
+                // move to another array to clear prev array
+                stored.addAll(processed);
+                processed.removeAll(processed);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
         // plan to cover hashmap to print size
+        // for now just showing all processed BOW in one arraylist
+        System.out.println("\n".repeat(10));
+        System.out.println(stored);
     }
-    // derrick: I made the same problem in indexoutofbound error, I still can't figure out, I'll try someday wed
 }

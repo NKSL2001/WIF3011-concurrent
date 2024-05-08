@@ -1,34 +1,41 @@
 
 import java.io.*;
 import java.util.*;
-// BufferedReader, FileReader, FileNotFoundException, IOException
-// ArrayList, Arrays, List
+import java.util.concurrent.atomic.AtomicBoolean;
 
+// BufferedReader, FileReader, FileNotFoundException, IOException
 public class ReadFile implements Runnable {
 
     private volatile List<String> processed;
+    private AtomicBoolean isReading;
 
-    public ReadFile(List<String> processed) {
+    public ReadFile(List<String> processed, AtomicBoolean isReading) {
         this.processed = processed;
+        this.isReading = isReading;
     }
 
     @Override
     public void run() {
         try (BufferedReader bufferedReader = new BufferedReader(new FileReader("C:\\\\WIF3011-concurrent\\\\test text.txt"))) {
-            String line;
+            String lineRead;
 
-            while ((line = bufferedReader.readLine()) != null) {
-                System.out.println(line);
+            while ((lineRead = bufferedReader.readLine()) != null) {
+                System.out.println(lineRead);
                 processed.addAll(
-                        Arrays.asList(line.split("\\W+"))
+                        Arrays.asList(lineRead.split("\\W+"))
                                 .stream()
                                 .map(string -> string.toLowerCase())
                                 .toList()
                 );
+                // wait in queue to prevent ConcurrentModificationException
+                Thread.sleep(25);
             }
+            // for countBOW to stop processing
+            isReading.getAndSet(false);
+
         } catch (FileNotFoundException e) {
             e.printStackTrace();
-        } catch (IOException e) {
+        } catch (IOException | InterruptedException e) {
             e.printStackTrace();
         }
     }
