@@ -16,7 +16,7 @@ public class ReadFile implements Runnable {
 
     @Override
     public void run() {
-        try (BufferedReader bufferedReader = new BufferedReader(new FileReader("C:\\\\WIF3011-concurrent\\\\test text.txt"))) {
+        try (BufferedReader bufferedReader = new BufferedReader(new FileReader("test text.txt"))) {
             String lineRead;
 
             while ((lineRead = bufferedReader.readLine()) != null) {
