@@ -3,13 +3,13 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 // ArrayList, List
-public class CountBOW implements Runnable {
+public class RunnableCount implements Runnable {
 
     private volatile List<String> processed = new ArrayList<>();
     private List<String> stored = new ArrayList<>();
     private AtomicBoolean isReading;
 
-    public CountBOW(List<String> processed, AtomicBoolean isReading) {
+    public RunnableCount(List<String> processed, AtomicBoolean isReading) {
         this.processed = processed;
         this.isReading = isReading;
     }

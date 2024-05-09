@@ -21,8 +21,8 @@ public class App {
         System.out.println("\n".repeat(10));
 
         // Concurrent #1: via Runnable
-        ReadFile readFile = new ReadFile(processed, isReading);
-        CountBOW countBOW = new CountBOW(processed, isReading);
+        RunnableRead readFile = new RunnableRead(processed, isReading);
+        RunnableCount countBOW = new RunnableCount(processed, isReading);
 
         Thread readThread = new Thread(readFile);
         Thread countThread = new Thread(countBOW);

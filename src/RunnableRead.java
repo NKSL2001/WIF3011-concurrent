@@ -4,12 +4,12 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 // BufferedReader, FileReader, FileNotFoundException, IOException
-public class ReadFile implements Runnable {
+public class RunnableRead implements Runnable {
 
     private volatile List<String> processed;
     private AtomicBoolean isReading;
 
-    public ReadFile(List<String> processed, AtomicBoolean isReading) {
+    public RunnableRead(List<String> processed, AtomicBoolean isReading) {
         this.processed = processed;
         this.isReading = isReading;
     }
