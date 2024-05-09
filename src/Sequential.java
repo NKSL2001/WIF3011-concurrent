@@ -30,11 +30,7 @@ public class Sequential {
         System.out.println(splitted);
         HashMap<String, Integer> counts = new HashMap<>();
         for (String word : splitted) {
-            if (!counts.containsKey(word)){
-                counts.put(word, 1);
-                continue;
-            }
-            counts.put(word, counts.get(word) + 1);
+            counts.put(word, counts.getOrDefault(word, 0) + 1);
         }
 
         System.out.println(counts.size());
