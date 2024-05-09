@@ -9,11 +9,12 @@ public class Sequential {
         try (BufferedReader  sc = new BufferedReader (new FileReader("test text.txt"))) {
             String line;
             while((line = sc.readLine()) != null){
-                System.out.println(line);
+                // System.out.println(line);
                 splitted.addAll(
                     Arrays.asList(line.split("\\W+"))
                     .stream()
                     .map(string ->  string.toLowerCase())
+                    .filter(string -> !string.isEmpty())
                     .toList()
                 );
             }
@@ -22,8 +23,7 @@ public class Sequential {
             e.printStackTrace();
         }
         
-        
-        System.out.println(splitted);
+        // System.out.println(splitted);
         HashMap<String, Integer> counts = new HashMap<>();
         for (String word : splitted) {
             counts.put(word, counts.getOrDefault(word, 0) + 1);
