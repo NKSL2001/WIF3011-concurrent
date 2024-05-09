@@ -1,13 +1,9 @@
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
+import java.io.*;
+import java.util.*;
 
 public class Sequential {
+    Map<String, Integer> results;
+
     public Sequential() throws IOException {
         List<String> splitted = new ArrayList<>();
         try (BufferedReader  sc = new BufferedReader (new FileReader("test text.txt"))) {
@@ -35,5 +31,6 @@ public class Sequential {
 
         System.out.println(counts.size());
         System.out.println(counts);
+        this.results = counts;
     }
 }
