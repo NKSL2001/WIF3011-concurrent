@@ -31,5 +31,12 @@ public class App {
         countThread.start();
         readThread.join();
         countThread.join();
+
+        // Concurrent #2: via Future
+        long starttime3 = System.currentTimeMillis();
+        FutureBOW futureResult = new FutureBOW();
+        long diff3 = System.currentTimeMillis() - starttime3;
+        System.out.printf("Future taken %d milliseconds.\n", diff3);
+
     }
 }
