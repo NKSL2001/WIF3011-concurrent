@@ -1,11 +1,15 @@
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
+import java.nio.BufferUnderflowException;
+import java.nio.ByteBuffer;
+import java.nio.channels.AsynchronousFileChannel;
+import java.nio.channels.CompletionHandler;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.*;
+// import java.util.stream.Stream;
 
 public class FutureBOW {
     Map<String, Integer> results;
@@ -14,109 +18,132 @@ public class FutureBOW {
         String filePath = "test text.txt";
         int chunkSize = 256;
 
-        File file = new File(filePath);
-        int numThreads = (int) Math.ceil(file.length() / (double) chunkSize);
-
-        // Create the thread pool
-        ExecutorService executor = Executors.newFixedThreadPool(numThreads);
-
-        Future<Map<String, Integer>>[] futures = new Future[numThreads];
-        // Submit the tasks to count word occurrences
-        for (int i = 0; i < numThreads; i++) {
-            futures[i] = executor.submit(
-                new WordCountTask(
-                    filePath, 
-                    i * chunkSize, 
-                    Math.min(file.length(), (i+1)*chunkSize) - 1, 
-                    i
-                )
-            );
-            // System.out.printf("%d, %d, run %d\n", i * chunkSize, Math.min(file.length(), (i+1)*chunkSize) - 1, i);
-        }
-
         // Create a map to hold the combined word counts
         Map<String, Integer> combinedWordCounts = new HashMap<>();
 
-        // Wait for all the tasks to complete and combine the results
-        for (int i = 0; i < numThreads; i++) {
-            Map<String, Integer> wordCounts;
+        try {
+            Path file = Path.of(filePath);
+            long filesize = Files.size(file);
 
-            try {
-                wordCounts = futures[i].get();
-                for (Map.Entry<String, Integer> entry : wordCounts.entrySet()) {
-                    String word = entry.getKey();
-                    int count = entry.getValue();
-    
-                    combinedWordCounts.put(word, combinedWordCounts.getOrDefault(word, 0) + count);
-                }
+            int numThreads = (int) Math.ceil(filesize / (double) chunkSize);
 
-            } catch (InterruptedException | ExecutionException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
+            var channel = AsynchronousFileChannel.open(file);
+
+            @SuppressWarnings("unchecked")
+            CompletableFuture<Map<String, Integer>>[] futures = new CompletableFuture[numThreads];
+            // start reading file tasks
+            for (int i = 0; i < numThreads; i++) {
+                WordCountTask task = new WordCountTask(i, chunkSize);
+                futures[i] = task.countWords(channel);
             }
+
+            // Wait for all the tasks to complete and combine the results
+            for (int i = 0; i < numThreads; i++) {
+                Map<String, Integer> wordCounts;
+
+                try {
+                    wordCounts = futures[i].get();
+                    for (Map.Entry<String, Integer> entry : wordCounts.entrySet()) {
+                        String word = entry.getKey();
+                        int count = entry.getValue();
+
+                        combinedWordCounts.put(word, combinedWordCounts.getOrDefault(word, 0) + count);
+                    }
+
+                } catch (InterruptedException | ExecutionException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+            }
+
+            // // another implementation using Stream but even more slower
+            // combinedWordCounts = Stream.of(futures)
+            //     .map(CompletableFuture::join)
+            //     .reduce(new HashMap<>(), (acc, wordCounts) -> {
+            //         for (Map.Entry<String, Integer> entry : wordCounts.entrySet()) {
+            //             String word = entry.getKey();
+            //             int count = entry.getValue();
+
+            //             acc.put(word, acc.getOrDefault(word, 0) + count);
+            //         }
+            //         return acc;
+            //     }, (acc1, acc2) -> {
+            //         for (Map.Entry<String, Integer> entry : acc2.entrySet()) {
+            //             String word = entry.getKey();
+            //             int count = entry.getValue();
+
+            //             acc1.put(word, acc1.getOrDefault(word, 0) + count);
+            //         }
+            //         return acc1;
+            //     });
+        } catch (Exception e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
         }
 
-        executor.shutdown();
         
-        // System.out.println(combinedWordCounts.size());
-        // System.out.println(combinedWordCounts);
+
         this.results = combinedWordCounts;
 
     }
 
-    static class WordCountTask implements Callable<Map<String, Integer>> {
-        private String filepath;
-        private long start;
-        private long end;
-        private int i;
+    static class WordCountTask {
+        ByteBuffer buffer;
+        int chunkSize;
+        int threadNum;
 
-        public WordCountTask(String filepath, long start, long end, int i) {
-            this.filepath = filepath;
-            this.start = start;
-            this.end = end;
-            this.i = i;
+        public WordCountTask(int threadNum, int size) {
+            this.threadNum = threadNum;
+            this.chunkSize = size;
+            this.buffer = ByteBuffer.allocate(size * 2);
         }
+        
+        public CompletableFuture<Map<String, Integer>> countWords (AsynchronousFileChannel channel){
+            CompletableFuture<Integer> completableFuture = new CompletableFuture<>();
 
-        @Override
-        public Map<String, Integer> call() throws Exception {
-            Map<String, Integer> wordCounts = new HashMap<>();
-
-            try (BufferedReader reader = new BufferedReader(new FileReader(filepath))) {
-                // Prepare buffer for string
-                StringBuilder content = new StringBuilder();
-
-                boolean removeFirstWord = false;
-                if (start != 0) {
-                    // Skip to the start position
-                    reader.skip(start - 1);
-                    char previousChar = (char) reader.read();
-                    // check if word is broken before this (not a space), if so discard the first word before the first space character
-                    removeFirstWord = !Character.toString(previousChar).matches("\\s");
-                    // add back this character since `read` moved pointer forward
-                    content.append(previousChar);
+            channel.read(buffer, threadNum * chunkSize, null, new CompletionHandler<Integer, Void>() {
+                @Override
+                public void completed(Integer result, Void attachment) {
+                    completableFuture.complete(result);
                 }
 
-                // Calculate the length to read
-                int lengthToRead = (int) (this.end - this.start);
+                @Override
+                public void failed(Throwable exc, Void attachment) {
+                    completableFuture.completeExceptionally(exc);
+                }
+            });
+
+            return completableFuture.thenApplyAsync((length) -> {
+                char previousChar = (char) buffer.get(0);
+                // check if word is broken before this (not a space), if so discard the first
+                // word before the first space character
+                // do not remove first word is this is first thread
+                boolean removeFirstWord = this.threadNum != 0 && !Character.toString(previousChar).matches("\\s");
+                Map<String, Integer> wordCounts = new HashMap<>();
 
                 // Read and append
-                char[] buffer = new char[lengthToRead];
-                reader.read(buffer, 0, lengthToRead);
-                content.append(buffer);
-                
-                // Check if end of pointer is full word, if not read until reach a space or end of file
+                buffer.position(0); // reset buffer position
+                byte[] chars = new byte[this.chunkSize];
+                buffer.get(chars, 0, Math.min(this.chunkSize, buffer.remaining()));
+                String content = new String(chars);
+
+                // Check if end of pointer is full word, if not read until reach a space or end
+                // of file
                 int c;
-                while ((c = reader.read()) != -1 && !Character.toString(c).matches("\\s")) {
-                    content.append((char) c);
+                try {
+                    while ((c = buffer.get()) != -1 && !Character.toString(c).matches("\\s")) {
+                        content += (char) c;
+                    }
+                } catch (BufferUnderflowException e) {
+                    // do nothing
                 }
 
                 // Count word occurrences
                 List<String> splitted = Arrays.asList(
-                        content.toString().split("\\s+")
-                    )
-                    .stream()
-                    .map(string -> string.toLowerCase())
-                    .toList();
+                        content.toString().split("\\s+"))
+                        .stream()
+                        .map(string -> string.toLowerCase())
+                        .toList();
 
                 // Add records
                 boolean firstWord = true;
@@ -128,29 +155,18 @@ public class FutureBOW {
                     }
                     firstWord = false;
 
-                    if (word.strip().isEmpty()) {
-                        continue;
-                    }
-
-                    // Check if word contains non-word (\W) characters and break them before adding into the map
-                    if (word.matches(".*\\W+.*")) {
-                        for (String subword: word.split("\\W+")) {
-                            if (subword.strip().isEmpty()) {
-                                continue;
-                            }
-                            wordCounts.put(subword, wordCounts.getOrDefault(subword, 0) + 1);
+                    // Break words with non-word (\W) characters before adding
+                    // into the map
+                    for (String subword : word.split("\\W+")) {
+                        if (subword.strip().isEmpty()) {
+                            continue;
                         }
-                    } else {
-                        // normal count
-                        wordCounts.put(word, wordCounts.getOrDefault(word, 0) + 1);
+                        wordCounts.put(subword, wordCounts.getOrDefault(subword, 0) + 1);
                     }
                 }
-        
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
 
-            return wordCounts;
+                return wordCounts;
+            });
         }
     }
 }
