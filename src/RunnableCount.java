@@ -43,6 +43,6 @@ public class RunnableCount implements Runnable {
             counts.put(word, counts.getOrDefault(word, 0) + 1);
         }
         this.results=counts;
-        System.out.println(results);
+        // System.out.println(results);
     }
 }
