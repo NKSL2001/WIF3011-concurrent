@@ -23,7 +23,7 @@ public class App {
         // System.out.println("\n".repeat(10));
 
         // Concurrent #1: via Runnable
-        RunnableRead readFile = new RunnableRead(processed, isReading);
+        RunnableRead readFile = new RunnableRead(processed, isReading, filePath);
         RunnableCount countBOW = new RunnableCount(processed, isReading);
 
         Thread readThread = new Thread(readFile);

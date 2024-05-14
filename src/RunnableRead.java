@@ -8,15 +8,17 @@ public class RunnableRead implements Runnable {
 
     private volatile List<String> processed;
     private AtomicBoolean isReading;
+    private String filePath;
 
-    public RunnableRead(List<String> processed, AtomicBoolean isReading) {
+    public RunnableRead(List<String> processed, AtomicBoolean isReading, String filePath) {
         this.processed = processed;
         this.isReading = isReading;
+        this.filePath = filePath;
     }
 
     @Override
     public void run() {
-        try (BufferedReader bufferedReader = new BufferedReader(new FileReader("test text.txt"))) {
+        try (BufferedReader bufferedReader = new BufferedReader(new FileReader(filePath))) {
             String lineRead;
 
             while ((lineRead = bufferedReader.readLine()) != null) {
@@ -25,8 +27,7 @@ public class RunnableRead implements Runnable {
                         Arrays.asList(lineRead.split("\\W+"))
                                 .stream()
                                 .map(string -> string.toLowerCase())
-                                .toList()
-                );
+                                .toList());
                 // wait in queue to prevent ConcurrentModificationException
                 Thread.sleep(25);
             }
