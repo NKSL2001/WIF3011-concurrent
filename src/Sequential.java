@@ -4,9 +4,9 @@ import java.util.*;
 public class Sequential {
     Map<String, Integer> results;
 
-    public Sequential() throws IOException {
+    public Sequential(String filePath) throws IOException {
         List<String> splitted = new ArrayList<>();
-        try (BufferedReader  sc = new BufferedReader (new FileReader("test text.txt"))) {
+        try (BufferedReader  sc = new BufferedReader (new FileReader(filePath))) {
             String line;
             while((line = sc.readLine()) != null){
                 splitted.addAll(

@@ -14,9 +14,7 @@ import java.util.concurrent.*;
 public class FutureBOW {
     Map<String, Integer> results;
 
-    public FutureBOW() {
-        String filePath = "test text.txt";
-        int chunkSize = 256;
+    public FutureBOW(String filePath, int chunkSize) {
 
         // Create a map to hold the combined word counts
         Map<String, Integer> combinedWordCounts = new HashMap<>();
@@ -95,7 +93,7 @@ public class FutureBOW {
         public WordCountTask(int threadNum, int size) {
             this.threadNum = threadNum;
             this.chunkSize = size;
-            this.buffer = ByteBuffer.allocate(size * 2);
+            this.buffer = ByteBuffer.allocate(size + 128); // additional 128 to capture cut-off words
         }
         
         public CompletableFuture<Map<String, Integer>> countWords (AsynchronousFileChannel channel){
@@ -136,6 +134,8 @@ public class FutureBOW {
                     }
                 } catch (BufferUnderflowException e) {
                     // do nothing
+                } catch (IllegalArgumentException e) {
+                    // do nothing, non-ascii character
                 }
 
                 // Count word occurrences

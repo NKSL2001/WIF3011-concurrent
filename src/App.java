@@ -9,9 +9,11 @@ public class App {
     static AtomicBoolean isReading = new AtomicBoolean(true);
 
     public static void main(String[] args) throws Exception {
+        String filePath = "test text.txt";
+
         // Sequential
         long starttime = System.currentTimeMillis();
-        Sequential sequentialResult = new Sequential();
+        Sequential sequentialResult = new Sequential(filePath);
         long diff = System.currentTimeMillis() - starttime;
         System.out.printf("Sequential taken %d milliseconds.\n", diff);
 
@@ -33,8 +35,10 @@ public class App {
         countThread.join();
 
         // Concurrent #2: via Future
+        int chunkSize = 32768;
+
         long starttime3 = System.currentTimeMillis();
-        FutureBOW futureResult = new FutureBOW();
+        FutureBOW futureResult = new FutureBOW(filePath, chunkSize);
         long diff3 = System.currentTimeMillis() - starttime3;
         System.out.printf("Future taken %d milliseconds.\n", diff3);
 
