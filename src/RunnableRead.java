@@ -20,7 +20,7 @@ public class RunnableRead implements Runnable {
             String lineRead;
 
             while ((lineRead = bufferedReader.readLine()) != null) {
-                System.out.println(lineRead);
+                // System.out.println(lineRead);
                 processed.addAll(
                         Arrays.asList(lineRead.split("\\W+"))
                                 .stream()
