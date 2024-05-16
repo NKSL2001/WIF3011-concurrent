@@ -16,7 +16,7 @@ public class App {
     public static void main(String[] args) throws Exception {
         App app = new App(); // for Runnable 2.0 synchronized monitor
 
-        String filePath = "C:/WIF3011-concurrent/test text.txt";
+        String filePath = "test text.txt";
 
         // Sequential
         long starttime = System.currentTimeMillis();
