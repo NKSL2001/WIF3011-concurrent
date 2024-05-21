@@ -1,17 +1,11 @@
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-// ArrayList, List, PriorityQueue, HashMap
+// ArrayList, List
 public class App {
 
     static volatile List<String> processed = new ArrayList<>();
     static AtomicBoolean isReading = new AtomicBoolean(true);
-    static AtomicBoolean isReading2 = new AtomicBoolean(true);
-
-    static volatile String lineRead;
-    static volatile Queue<String> listRead = new PriorityQueue<>();
-    static volatile List<String> processed2 = new ArrayList<>();
-    static volatile HashMap<String, Integer> counts = new HashMap<>();
 
     public static void main(String[] args) throws Exception {
         App app = new App(); // for Runnable 2.0 synchronized monitor
@@ -49,22 +43,8 @@ public class App {
 
         // Concurrent via Runnable 2.0
         // 1 producer thread 2 consumer threads
-        RunnableRead2 readFile2 = new RunnableRead2(listRead, filePath, lineRead, app, isReading2);
-        RunnableCount2 countWord = new RunnableCount2(app, isReading2, listRead, processed2, counts);
-        RunnableCount2 countWord2 = new RunnableCount2(app, isReading2, listRead, processed2, counts);
-
-        Thread readThread2 = new Thread(readFile2);
-        Thread countThread2 = new Thread(countWord);
-        Thread countThread3 = new Thread(countWord2);
-
         long starttime4 = System.currentTimeMillis();
-        readThread2.start();
-        countThread2.start();
-        countThread3.start();
-        
-        readThread2.join();
-        countThread2.join();
-        countThread3.join();
+        RunnableBOW runnableResult = new RunnableBOW(filePath, app);
         long diff4 = System.currentTimeMillis() - starttime4;
         System.out.printf("Runnable 2.0 taken %d milliseconds.\n", diff4);
     }
