@@ -19,19 +19,19 @@ public class App {
         System.out.printf("Sequential taken %d milliseconds.\n", diff);
 
         // Concurrent #1: via Runnable
-        RunnableRead readFile = new RunnableRead(processed, isReading, filePath);
-        RunnableCount countBOW = new RunnableCount(processed, isReading);
+        // RunnableRead readFile = new RunnableRead(processed, isReading, filePath);
+        // RunnableCount countBOW = new RunnableCount(processed, isReading);
 
-        Thread readThread = new Thread(readFile);
-        Thread countThread = new Thread(countBOW);
+        // Thread readThread = new Thread(readFile);
+        // Thread countThread = new Thread(countBOW);
 
-        long starttime2 = System.currentTimeMillis();
-        readThread.start();
-        countThread.start();
-        readThread.join();
-        countThread.join();
-        long diff2 = System.currentTimeMillis() - starttime2;
-        System.out.printf("Runnable taken %d milliseconds.\n", diff2);
+        // long starttime2 = System.currentTimeMillis();
+        // readThread.start();
+        // countThread.start();
+        // readThread.join();
+        // countThread.join();
+        // long diff2 = System.currentTimeMillis() - starttime2;
+        // System.out.printf("Runnable taken %d milliseconds.\n", diff2);
 
         // Concurrent #2: via Future
         int chunkSize = 32768;
