@@ -14,18 +14,17 @@ public class App {
         String[] filePaths = {
                 "10kb_largetextfile.txt",
                 "100kb_largetextfile.txt",
-                //"500kb_largetextfile.txt",
-                //"1mb_largetextfile.txt",
-                //"5mb_largetextfile.txt",
-                //"10mb_largetextfile.txt",
-                //"30mb_largetextfile.txt",
+                "500kb_largetextfile.txt",
+                "1mb_largetextfile.txt",
+                "5mb_largetextfile.txt",
+                "10mb_largetextfile.txt",
+                "30mb_largetextfile.txt",
         };
 
-        long sum1=0;
-        long sum3=0;
-        long sum4=0;
-
         for (String filePath : filePaths) {
+            long sum1=0;
+            long sum3=0;
+            long sum4=0;
 
             for (int i = 0; i < 3; i++) {
                 // Sequential
@@ -33,22 +32,12 @@ public class App {
                 Sequential sequentialResult = new Sequential(filePath);
                 long diff = System.currentTimeMillis() - starttime;
                 System.out.printf("Sequential taken %d milliseconds.\n", diff);
-                System.out.println();
 
-                // Concurrent #1: via Runnable
-                // RunnableRead readFile = new RunnableRead(processed, isReading, filePath);
-                // RunnableCount countBOW = new RunnableCount(processed, isReading);
-
-                // Thread readThread = new Thread(readFile);
-                // Thread countThread = new Thread(countBOW);
-
-                // long starttime2 = System.currentTimeMillis();
-                // readThread.start();
-                // countThread.start();
-                // readThread.join();
-                // countThread.join();
-                // long diff2 = System.currentTimeMillis() - starttime2;
-                // System.out.printf("Runnable taken %d milliseconds.\n", diff2);
+                // Concurrent #1: Runnable 2.0
+                long starttime4 = System.currentTimeMillis();
+                RunnableBOW runnableResult = new RunnableBOW(filePath, app);
+                long diff4 = System.currentTimeMillis() - starttime4;
+                System.out.printf("Runnable 2.0 taken %d milliseconds.\n", diff4);
 
                 // Concurrent #2: via Future
                 int chunkSize = 32768;
@@ -57,20 +46,12 @@ public class App {
                 FutureBOW futureResult = new FutureBOW(filePath, chunkSize);
                 long diff3 = System.currentTimeMillis() - starttime3;
                 System.out.printf("Future taken %d milliseconds.\n", diff3);
-                System.out.println();
-
-                // Concurrent via Runnable 2.0
-                // 1 producer thread 2 consumer threads
-                long starttime4 = System.currentTimeMillis();
-                RunnableBOW runnableResult = new RunnableBOW(filePath, app);
-                long diff4 = System.currentTimeMillis() - starttime4;
-                System.out.printf("Runnable 2.0 taken %d milliseconds.\n", diff4);
-                System.out.println();
 
                 sum1 += diff;
                 sum3 += diff3;
                 sum4 += diff4;
             }
+
             System.out.println("===================================");
             System.out.println("======="+filePath+"========");
 
@@ -78,9 +59,8 @@ public class App {
             System.out.println("Future average time: "+ sum3/3 +" milliseconds");
             System.out.println("Runnable 2.0 average time: "+ sum4/3 +" milliseconds");
 
+            System.out.println("===================================");
+            System.out.println("");
         }
-
-
-
     }
 }
