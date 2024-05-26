@@ -34,10 +34,10 @@ public class RunnableBOW {
 
         waitForCountingThreadsToFinish();
 
-        // Print word counts
+       /* // Print word counts
         for (Map.Entry<String, Integer> entry : counts.entrySet()) {
             System.out.println(entry.getKey() + ": " + entry.getValue());
-        }
+        }*/
     }
 
     public synchronized void startCountingThread() {
