@@ -2,13 +2,16 @@ import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousFileChannel;
 import java.nio.channels.CompletionHandler;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.*;
+import java.util.regex.Pattern;
 // import java.util.stream.Stream;
 
 public class FutureBOW {
@@ -79,8 +82,6 @@ public class FutureBOW {
             e.printStackTrace();
         }
 
-        
-
         this.results = combinedWordCounts;
 
     }
@@ -89,14 +90,16 @@ public class FutureBOW {
         ByteBuffer buffer;
         int chunkSize;
         int threadNum;
+        private final static Pattern wordsplitter = Pattern.compile("\\W+", Pattern.UNICODE_CHARACTER_CLASS);
+        private final static String chunkBoundaryCondition = "\\s";
 
         public WordCountTask(int threadNum, int size) {
             this.threadNum = threadNum;
             this.chunkSize = size;
             this.buffer = ByteBuffer.allocate(size + 128); // additional 128 to capture cut-off words
         }
-        
-        public CompletableFuture<Map<String, Integer>> countWords (AsynchronousFileChannel channel){
+
+        public CompletableFuture<Map<String, Integer>> countWords(AsynchronousFileChannel channel) {
             CompletableFuture<Integer> completableFuture = new CompletableFuture<>();
 
             channel.read(buffer, threadNum * chunkSize, null, new CompletionHandler<Integer, Void>() {
@@ -115,32 +118,47 @@ public class FutureBOW {
                 char previousChar = (char) buffer.get(0);
                 // check if word is broken before this (not a space), if so discard the first
                 // word before the first space character
-                // do not remove first word is this is first thread
-                boolean removeFirstWord = this.threadNum != 0 && !Character.toString(previousChar).matches("\\s");
+                // do not remove first word if this is first thread
+                boolean removeFirstWord = this.threadNum != 0
+                        && !Character.toString(previousChar).matches(chunkBoundaryCondition);
                 Map<String, Integer> wordCounts = new HashMap<>();
 
                 // Read and append
                 buffer.position(0); // reset buffer position
                 byte[] chars = new byte[this.chunkSize];
                 buffer.get(chars, 0, Math.min(this.chunkSize, buffer.remaining()));
-                String content = new String(chars);
+                String content = new String(chars, StandardCharsets.UTF_8);
 
                 // Check if end of pointer is full word, if not read until reach a space or end
                 // of file
                 int c;
                 try {
-                    while ((c = buffer.get()) != -1 && !Character.toString(c).matches("\\s")) {
+                    while ((c = buffer.get()) != -1) {
+                        if (c < 0) {
+                            // is UTF-8 multibyte sequence, decode manually
+                            List<Byte> utf8Bytes = new ArrayList<>();
+                            utf8Bytes.add((byte) c);
+                            while ((c = buffer.get()) < 0) {
+                                utf8Bytes.add((byte) c);
+                            }
+                            byte[] utf8BytesArray = new byte[utf8Bytes.size()];
+                            content += new String(utf8BytesArray, StandardCharsets.UTF_8);
+                            continue;
+                        }
+                        if (Character.toString(c).matches(chunkBoundaryCondition)) {
+                            // exit condition
+                            break;
+                        }
                         content += (char) c;
                     }
                 } catch (BufferUnderflowException e) {
                     // do nothing
-                } catch (IllegalArgumentException e) {
-                    // do nothing, non-ascii character
                 }
 
                 // Count word occurrences
+                // break at chunkBoundaryCondition because to ensure removing the correct first word
                 List<String> splitted = Arrays.asList(
-                        content.toString().split("\\s+"))
+                        content.toString().split(chunkBoundaryCondition))
                         .stream()
                         .map(string -> string.toLowerCase())
                         .toList();
@@ -149,7 +167,7 @@ public class FutureBOW {
                 boolean firstWord = true;
                 for (String word : splitted) {
                     if (firstWord && removeFirstWord) {
-                        // remove first word as it is broken
+                        // remove first word as it is broken from previous chunk
                         firstWord = false;
                         continue;
                     }
@@ -157,7 +175,7 @@ public class FutureBOW {
 
                     // Break words with non-word (\W) characters before adding
                     // into the map
-                    for (String subword : word.split("\\W+")) {
+                    for (String subword : wordsplitter.split(word)) {
                         if (subword.strip().isEmpty()) {
                             continue;
                         }

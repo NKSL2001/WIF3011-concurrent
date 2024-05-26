@@ -1,6 +1,8 @@
 import java.util.*;
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.regex.Pattern;
 
 // ArrayList, HashMap, List, PriorityQueue, Queue
 public class RunnableBOW {
@@ -81,7 +83,14 @@ public class RunnableBOW {
 
         @Override
         public void run() {
-            try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
+            try (
+                BufferedReader br = new BufferedReader (
+                    new InputStreamReader(
+                        new FileInputStream(filePath), 
+                        StandardCharsets.UTF_8
+                    )
+                )
+            ) {
                 while ((lineRead = br.readLine()) != null) {
                     synchronized (app) {
                         listRead.add(lineRead);
@@ -115,6 +124,7 @@ public class RunnableBOW {
         private volatile Queue<String> listRead;
         private volatile List<String> processed;
         private volatile HashMap<String, Integer> counts;
+        private final static Pattern wordsplitter = Pattern.compile("\\W+", Pattern.UNICODE_CHARACTER_CLASS);
 
         public RunnableCount2(RunnableBOW app, AtomicBoolean isReading, Queue<String> listRead, List<String> processed, HashMap<String, Integer> counts) {
             this.app = app;
@@ -134,7 +144,7 @@ public class RunnableBOW {
                         }
                         if (!listRead.isEmpty()) {
                             processed.addAll(
-                                    Arrays.asList(listRead.poll().split("\\W+"))
+                                    Arrays.asList(wordsplitter.split(listRead.poll()))
                                             .stream()
                                             .map(String::toLowerCase)
                                             .toList()

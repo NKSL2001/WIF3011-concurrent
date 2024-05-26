@@ -1,16 +1,27 @@
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.regex.Pattern;
 
 public class Sequential {
     Map<String, Integer> results;
 
     public Sequential(String filePath) throws IOException {
         List<String> splitted = new ArrayList<>();
-        try (BufferedReader  sc = new BufferedReader (new FileReader(filePath))) {
+        try (
+            BufferedReader sc = new BufferedReader (
+                new InputStreamReader(
+                    new FileInputStream(filePath), 
+                    StandardCharsets.UTF_8
+                )
+            )
+        ) {
             String line;
+
+            Pattern wordsplitter = Pattern.compile("\\W+", Pattern.UNICODE_CHARACTER_CLASS);
             while((line = sc.readLine()) != null){
                 splitted.addAll(
-                    Arrays.asList(line.split("\\W+"))
+                    Arrays.asList(wordsplitter.split(line))
                     .stream()
                     .map(string ->  string.toLowerCase())
                     .filter(string -> !string.isEmpty())
