@@ -47,14 +47,14 @@ public class RunnableBOW {
         Thread counterThread = new Thread(counter);
         counterThreads.add(counterThread);
         counterThread.start();
-        System.out.println("Counting thread " + counterThread.getName() + " started."); //used for debugging
+        // System.out.println("Counting thread " + counterThread.getName() + " started."); //used for debugging
     }
 
     private void waitForCountingThreadsToFinish() {
         for (Thread counterThread : counterThreads) {
             try {
                 counterThread.join();
-                System.out.println("Counting thread " + counterThread.getName() + " ended."); //used for debugging
+                // System.out.println("Counting thread " + counterThread.getName() + " ended."); //used for debugging
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
