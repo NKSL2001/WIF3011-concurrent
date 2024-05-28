@@ -17,12 +17,15 @@ public class App {
                 "30mb_largetextfile.txt",
         };
 
+        int numberOfAvgLoop = 3;
+        String resultTimeJson = "{";
+
         for (String filePath : filePaths) {
             long sum1=0;
             long sum2=0;
             long sum3=0;
 
-            for (int i = 0; i < 3; i++) {
+            for (int i = 0; i <= numberOfAvgLoop; i++) {
                 // Sequential
                 long starttime = System.currentTimeMillis();
                 Results sequentialResult = new Sequential(filePath);
@@ -41,21 +44,39 @@ public class App {
                 long diff3 = System.currentTimeMillis() - starttime3;
                 System.out.printf("Future taken %d milliseconds.\n", diff3);
 
-                sum1 += diff;
-                sum2 += diff2;
-                sum3 += diff3;
-                
+                if (i != 0){
+                    // remove first load slowdown
+                    sum1 += diff;
+                    sum2 += diff2;
+                    sum3 += diff3;
+                }
+
+                System.gc();
             }
 
             System.out.println("===================================");
             System.out.println("======="+filePath+"========");
 
-            System.out.println("Sequential average time: "+ sum1/3 +" milliseconds");
-            System.out.println("Runnable average time: "+ sum2/3 +" milliseconds");
-            System.out.println("Future average time: "+ sum3/3 +" milliseconds");
+            System.out.println("Sequential average time: "+ sum1/numberOfAvgLoop +" milliseconds");
+            System.out.println("Runnable average time: "+ sum2/numberOfAvgLoop +" milliseconds");
+            System.out.println("Future average time: "+ sum3/numberOfAvgLoop +" milliseconds");
 
             System.out.println("===================================");
             System.out.println("");
+            
+            resultTimeJson += String.format("\"%s\": {\"sequential\":\"%d\",\"runnable\":\"%d\",\"future\":\"%d\"},", 
+                filePath.split("_")[0],
+                sum1/numberOfAvgLoop,
+                sum2/numberOfAvgLoop,
+                sum3/numberOfAvgLoop
+            );
         }
+
+        resultTimeJson = resultTimeJson.substring(0, resultTimeJson.length()-1) + "}";
+
+        System.out.println("\n\nCopy the following string in brackets {} and share it.");
+        System.out.println("===================================");
+
+        System.out.println("{\"system_info\": "+systemInfo.toJson() + ", \"results\": "+resultTimeJson+"}");
     }
 }
