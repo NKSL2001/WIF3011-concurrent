@@ -1,28 +1,20 @@
 import java.util.*;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 
-// ArrayList, HashMap, List, PriorityQueue, Queue
 public class RunnableBOW {
 
-    static AtomicBoolean isReading = new AtomicBoolean(true);
-    static volatile String lineRead;
-    static volatile Queue<String> listRead = new PriorityQueue<>();
-    static volatile HashMap<String, Integer> counts = new HashMap<>();
+    public volatile ConcurrentHashMap<String, Integer> counts = new ConcurrentHashMap<String, Integer>();
     private final List<Thread> counterThreads = new ArrayList<>();
-    private final int lineThreshold; 
 
     public RunnableBOW(String filePath) {
-        this(filePath, 20); //change lineThreshold to set number of lines needed for new thread
+        this(filePath, 100); //change lineThreshold to set number of lines needed for new thread
     }
 
     public RunnableBOW(String filePath, int lineThreshold) {
-        this.lineThreshold = lineThreshold;
-
-        RunnableRead readFile = new RunnableRead(listRead, filePath, lineRead, this, isReading, lineThreshold);
-
+        RunnableRead readFile = new RunnableRead(filePath, this, lineThreshold);
         Thread readThread = new Thread(readFile);
         readThread.start();
 
@@ -40,8 +32,8 @@ public class RunnableBOW {
         }*/
     }
 
-    public synchronized void startCountingThread() {
-        RunnableCount counter = new RunnableCount(this, isReading, listRead, new ArrayList<>(), counts);
+    public synchronized void startCountingThread(List<String> listRead) {
+        RunnableCount counter = new RunnableCount(listRead, counts);
         Thread counterThread = new Thread(counter);
         counterThreads.add(counterThread);
         counterThread.start();
@@ -61,21 +53,13 @@ public class RunnableBOW {
 
     public class RunnableRead implements Runnable {
 
-        private volatile Queue<String> listRead;
         private String filePath;
-        private volatile String lineRead;
         private final RunnableBOW app;
-        private AtomicBoolean isReading;
         private final int lineThreshold;
-        private int lineCount = 0;
 
-        public RunnableRead(Queue<String> listRead, String filePath, String lineRead, RunnableBOW app,
-                             AtomicBoolean isReading, int lineThreshold) {
-            this.listRead = listRead;
+        public RunnableRead(String filePath, RunnableBOW app, int lineThreshold) {
             this.filePath = filePath;
-            this.lineRead = lineRead;
             this.app = app;
-            this.isReading = isReading;
             this.lineThreshold = lineThreshold;
         }
 
@@ -89,24 +73,20 @@ public class RunnableBOW {
                     )
                 )
             ) {
+                String lineRead;
+                List<String> listRead = new ArrayList<>();
                 while ((lineRead = br.readLine()) != null) {
-                    synchronized (app) {
-                        listRead.add(lineRead);
-                        lineCount++;
+                    listRead.add(lineRead);
 
-                        if (lineCount >= lineThreshold) {
-                            app.startCountingThread();
-                            lineCount = 0;
-                        }
-
-                        app.notifyAll();
+                    if (listRead.size() >= lineThreshold) {
+                        app.startCountingThread(listRead);
+                        // create new list to count with
+                        listRead = new ArrayList<>();
                     }
                 }
-                isReading.set(false);
 
-                synchronized (app) {
-                    app.notifyAll();
-                }
+                // for last thread
+                app.startCountingThread(listRead);
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
             } catch (IOException e) {
@@ -117,49 +97,24 @@ public class RunnableBOW {
 
     public class RunnableCount implements Runnable {
 
-        private final RunnableBOW app;
-        private AtomicBoolean isReading;
-        private volatile Queue<String> listRead;
-        private volatile List<String> processed;
-        private volatile HashMap<String, Integer> counts;
+        private final List<String> listRead;
+        private volatile ConcurrentHashMap<String, Integer> counts;
         private final static Pattern wordsplitter = Pattern.compile("\\W+", Pattern.UNICODE_CHARACTER_CLASS);
 
-        public RunnableCount(RunnableBOW app, AtomicBoolean isReading, Queue<String> listRead, List<String> processed, HashMap<String, Integer> counts) {
-            this.app = app;
-            this.isReading = isReading;
+        public RunnableCount(List<String> listRead, ConcurrentHashMap<String, Integer> counts) {
             this.listRead = listRead;
-            this.processed = processed;
             this.counts = counts;
         }
 
         @Override
         public void run() {
-            try {
-                while (isReading.get() || !listRead.isEmpty()) {
-                    synchronized (app) {
-                        while (listRead.isEmpty() && isReading.get()) {
-                            app.wait();
-                        }
-                        if (!listRead.isEmpty()) {
-                            processed.addAll(
-                                    Arrays.asList(wordsplitter.split(listRead.poll()))
-                                            .stream()
-                                            .map(String::toLowerCase)
-                                            .toList()
-                            );
-
-                            for (String word : processed) {
-                                counts.put(word, counts.getOrDefault(word, 0) + 1);
-                            }
-
-                            processed.clear();
-                            app.notifyAll();
-                        }
-                    }
-                }
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+            listRead.stream()
+                .flatMap(string -> Arrays.stream(wordsplitter.split(string)))
+                .map(string -> string.toLowerCase())
+                .filter(string -> !string.isEmpty())
+                .forEach(word -> {
+                    counts.merge(word, 1, Integer::sum);
+                });
         }
     }
 }
