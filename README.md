@@ -19,10 +19,12 @@ The project requires a graphical interface showing the graph comparison between 
 
 ### Set up web server
 
+Ensure using JDK instead of JRE.
+
 1. Install [Community Server Connectors](https://marketplace.visualstudio.com/items?itemName=redhat.vscode-community-server-connector) and restart VS Code.
 2. Find Servers panel at the bottom of Explorer side panel.
 3. Right click on Community Server Connectors and choose "Create New Server..."
-4. Choose "Yes" to download a server, choose "Apache Tomcat 11.0.0-M6". Select "Continue" to agree to the license.
+4. Choose "Yes" to download a server, choose "Apache Tomcat 11.0.0-M6". Select "Continue" - "Yes" to agree to the license.
 5. Wait for download to finish.
 6. In the Servers panel, right click on apache-tomcat-11.0.0-M6 and choose "Add Deployment".
 7. Select "Exploded" to load the folder instead of using a compiled WAR file.
