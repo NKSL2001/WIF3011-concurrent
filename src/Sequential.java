@@ -35,7 +35,7 @@ public class Sequential {
         
         HashMap<String, Integer> counts = new HashMap<>();
         for (String word : splitted) {
-            counts.put(word, counts.getOrDefault(word, 0) + 1);
+            counts.merge(word, 1, Integer::sum);
         }
 
         // store count results

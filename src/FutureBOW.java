@@ -52,7 +52,7 @@ public class FutureBOW {
                         String word = entry.getKey();
                         int count = entry.getValue();
 
-                        combinedWordCounts.put(word, combinedWordCounts.getOrDefault(word, 0) + count);
+                        combinedWordCounts.merge(word, count, Integer::sum);
                     }
 
                 } catch (InterruptedException | ExecutionException e) {
@@ -182,7 +182,7 @@ public class FutureBOW {
                         if (subword.strip().isEmpty()) {
                             continue;
                         }
-                        wordCounts.put(subword, wordCounts.getOrDefault(subword, 0) + 1);
+                        wordCounts.merge(subword, 1, Integer::sum);
                     }
                 }
 
