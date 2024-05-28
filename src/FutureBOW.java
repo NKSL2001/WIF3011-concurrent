@@ -59,7 +59,6 @@ public class FutureBOW implements Results {
             //         }
 
             //     } catch (InterruptedException | ExecutionException e) {
-            //         // TODO Auto-generated catch block
             //         e.printStackTrace();
             //     }
             // }
@@ -76,7 +75,6 @@ public class FutureBOW implements Results {
                     Integer::sum
                 ));
         } catch (Exception e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
 
