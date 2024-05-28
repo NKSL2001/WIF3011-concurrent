@@ -7,12 +7,15 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.*;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 // import java.util.stream.Stream;
+import java.util.stream.Stream;
 
 public class FutureBOW implements Results {
     Map<String, Integer> results;
@@ -42,45 +45,36 @@ public class FutureBOW implements Results {
                 futures[i] = task.countWords(channel);
             }
 
-            // Wait for all the tasks to complete and combine the results
-            for (int i = 0; i < numThreads; i++) {
-                Map<String, Integer> wordCounts;
+            // // Wait for all the tasks to complete and combine the results
+            // for (int i = 0; i < numThreads; i++) {
+            //     Map<String, Integer> wordCounts;
 
-                try {
-                    wordCounts = futures[i].get();
-                    for (Map.Entry<String, Integer> entry : wordCounts.entrySet()) {
-                        String word = entry.getKey();
-                        int count = entry.getValue();
-
-                        combinedWordCounts.merge(word, count, Integer::sum);
-                    }
-
-                } catch (InterruptedException | ExecutionException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
-                }
-            }
-
-            // // another implementation using Stream but even more slower
-            // combinedWordCounts = Stream.of(futures)
-            //     .map(CompletableFuture::join)
-            //     .reduce(new HashMap<>(), (acc, wordCounts) -> {
+            //     try {
+            //         wordCounts = futures[i].get();
             //         for (Map.Entry<String, Integer> entry : wordCounts.entrySet()) {
             //             String word = entry.getKey();
             //             int count = entry.getValue();
 
-            //             acc.put(word, acc.getOrDefault(word, 0) + count);
+            //             combinedWordCounts.merge(word, count, Integer::sum);
             //         }
-            //         return acc;
-            //     }, (acc1, acc2) -> {
-            //         for (Map.Entry<String, Integer> entry : acc2.entrySet()) {
-            //             String word = entry.getKey();
-            //             int count = entry.getValue();
 
-            //             acc1.put(word, acc1.getOrDefault(word, 0) + count);
-            //         }
-            //         return acc1;
-            //     });
+            //     } catch (InterruptedException | ExecutionException e) {
+            //         // TODO Auto-generated catch block
+            //         e.printStackTrace();
+            //     }
+            // }
+
+            // another implementation using Stream
+            combinedWordCounts = Stream.of(futures)
+                .parallel()
+                .map(CompletableFuture::join)
+                .map(Map::entrySet)
+                .flatMap(Collection::stream)
+                .collect(Collectors.toMap(
+                    Map.Entry::getKey,
+                    Map.Entry::getValue,
+                    Integer::sum
+                ));
         } catch (Exception e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
@@ -129,7 +123,6 @@ public class FutureBOW implements Results {
                 // do not remove first word if this is first thread
                 boolean removeFirstWord = this.threadNum != 0
                         && !Character.toString(previousChar).matches(chunkBoundaryCondition);
-                Map<String, Integer> wordCounts = new HashMap<>();
 
                 // Read and append
                 buffer.position(0); // reset buffer position
@@ -165,30 +158,17 @@ public class FutureBOW implements Results {
 
                 // Count word occurrences
                 // break at chunkBoundaryCondition because to ensure removing the correct first word
-                List<String> splitted = Arrays.asList(content.split(chunkBoundaryCondition))
-                        .stream()
-                        .map(string -> string.toLowerCase())
-                        .toList();
-
-                // Add records
-                boolean firstWord = true;
-                for (String word : splitted) {
-                    if (firstWord && removeFirstWord) {
-                        // remove first word as it is broken from previous chunk
-                        firstWord = false;
-                        continue;
-                    }
-                    firstWord = false;
-
-                    // Break words with non-word (\W) characters before adding
-                    // into the map
-                    for (String subword : wordsplitter.split(word)) {
-                        if (subword.strip().isEmpty()) {
-                            continue;
-                        }
-                        wordCounts.merge(subword, 1, Integer::sum);
-                    }
+                Stream<String> splitted = Arrays.asList(content.split(chunkBoundaryCondition)).stream();
+                
+                if (removeFirstWord) {
+                    // remove first word as it is broken from previous chunk
+                    splitted = splitted.skip(1);
                 }
+
+                Map<String, Integer> wordCounts = splitted
+                    .flatMap(string -> Arrays.stream(wordsplitter.split(string)))
+                    .filter(string -> !string.isEmpty())
+                    .collect(Collectors.toMap(String::toLowerCase, x -> 1, Integer::sum));
 
                 return wordCounts;
             });
