@@ -7,29 +7,27 @@ import java.util.regex.Pattern;
 // ArrayList, HashMap, List, PriorityQueue, Queue
 public class RunnableBOW {
 
-    static AtomicBoolean isReading2 = new AtomicBoolean(true);
+    static AtomicBoolean isReading = new AtomicBoolean(true);
     static volatile String lineRead;
     static volatile Queue<String> listRead = new PriorityQueue<>();
     static volatile HashMap<String, Integer> counts = new HashMap<>();
     private final List<Thread> counterThreads = new ArrayList<>();
     private final int lineThreshold; 
-    private final App app;
 
-    public RunnableBOW(String filePath, App app) {
-        this(filePath, app, 20); //change lineThreshold to set number of lines needed for new thread
+    public RunnableBOW(String filePath) {
+        this(filePath, 20); //change lineThreshold to set number of lines needed for new thread
     }
 
-    public RunnableBOW(String filePath, App app, int lineThreshold) {
-        this.app = app;
+    public RunnableBOW(String filePath, int lineThreshold) {
         this.lineThreshold = lineThreshold;
 
-        RunnableRead2 readFile2 = new RunnableRead2(listRead, filePath, lineRead, this, isReading2, lineThreshold);
+        RunnableRead readFile = new RunnableRead(listRead, filePath, lineRead, this, isReading, lineThreshold);
 
-        Thread readThread2 = new Thread(readFile2);
-        readThread2.start();
+        Thread readThread = new Thread(readFile);
+        readThread.start();
 
         try {
-            readThread2.join();
+            readThread.join();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -43,7 +41,7 @@ public class RunnableBOW {
     }
 
     public synchronized void startCountingThread() {
-        RunnableCount2 counter = new RunnableCount2(this, isReading2, listRead, new ArrayList<>(), counts);
+        RunnableCount counter = new RunnableCount(this, isReading, listRead, new ArrayList<>(), counts);
         Thread counterThread = new Thread(counter);
         counterThreads.add(counterThread);
         counterThread.start();
@@ -61,7 +59,7 @@ public class RunnableBOW {
         }
     }
 
-    public class RunnableRead2 implements Runnable {
+    public class RunnableRead implements Runnable {
 
         private volatile Queue<String> listRead;
         private String filePath;
@@ -71,7 +69,7 @@ public class RunnableBOW {
         private final int lineThreshold;
         private int lineCount = 0;
 
-        public RunnableRead2(Queue<String> listRead, String filePath, String lineRead, RunnableBOW app,
+        public RunnableRead(Queue<String> listRead, String filePath, String lineRead, RunnableBOW app,
                              AtomicBoolean isReading, int lineThreshold) {
             this.listRead = listRead;
             this.filePath = filePath;
@@ -117,7 +115,7 @@ public class RunnableBOW {
         }
     }
 
-    public class RunnableCount2 implements Runnable {
+    public class RunnableCount implements Runnable {
 
         private final RunnableBOW app;
         private AtomicBoolean isReading;
@@ -126,7 +124,7 @@ public class RunnableBOW {
         private volatile HashMap<String, Integer> counts;
         private final static Pattern wordsplitter = Pattern.compile("\\W+", Pattern.UNICODE_CHARACTER_CLASS);
 
-        public RunnableCount2(RunnableBOW app, AtomicBoolean isReading, Queue<String> listRead, List<String> processed, HashMap<String, Integer> counts) {
+        public RunnableCount(RunnableBOW app, AtomicBoolean isReading, Queue<String> listRead, List<String> processed, HashMap<String, Integer> counts) {
             this.app = app;
             this.isReading = isReading;
             this.listRead = listRead;

@@ -3,8 +3,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class App {
     public static void main(String[] args) throws Exception {
-        App app = new App(); // for Runnable 2.0 synchronized monitor
-
         //String filePath = "test text.txt";
         String[] filePaths = {
                 "10kb_largetextfile.txt",
@@ -30,7 +28,7 @@ public class App {
 
                 // Concurrent #1: Runnable 2.0
                 long starttime4 = System.currentTimeMillis();
-                RunnableBOW runnableResult = new RunnableBOW(filePath, app);
+                RunnableBOW runnableResult = new RunnableBOW(filePath);
                 long diff4 = System.currentTimeMillis() - starttime4;
                 System.out.printf("Runnable 2.0 taken %d milliseconds.\n", diff4);
 
