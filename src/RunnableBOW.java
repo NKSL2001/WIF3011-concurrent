@@ -4,8 +4,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 
-public class RunnableBOW {
-
+public class RunnableBOW implements Results {
     public volatile ConcurrentHashMap<String, Integer> counts = new ConcurrentHashMap<String, Integer>();
     private final List<Thread> counterThreads = new ArrayList<>();
 
@@ -30,6 +29,10 @@ public class RunnableBOW {
         for (Map.Entry<String, Integer> entry : counts.entrySet()) {
             System.out.println(entry.getKey() + ": " + entry.getValue());
         }*/
+    }
+
+    public Map<String, Integer> results() {
+        return counts;
     }
 
     public synchronized void startCountingThread(List<String> listRead) {

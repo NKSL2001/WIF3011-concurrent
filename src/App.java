@@ -22,19 +22,19 @@ public class App {
             for (int i = 0; i < 3; i++) {
                 // Sequential
                 long starttime = System.currentTimeMillis();
-                Sequential sequentialResult = new Sequential(filePath);
+                Results sequentialResult = new Sequential(filePath);
                 long diff = System.currentTimeMillis() - starttime;
                 System.out.printf("Sequential taken %d milliseconds.\n", diff);
 
                 // Concurrent #1: Runnable 2.0
                 long starttime2 = System.currentTimeMillis();
-                RunnableBOW runnableResult = new RunnableBOW(filePath);
+                Results runnableResult = new RunnableBOW(filePath);
                 long diff2 = System.currentTimeMillis() - starttime2;
                 System.out.printf("Runnable taken %d milliseconds.\n", diff2);
 
                 // Concurrent #2: via Future
                 long starttime3 = System.currentTimeMillis();
-                FutureBOW futureResult = new FutureBOW(filePath);
+                Results futureResult = new FutureBOW(filePath);
                 long diff3 = System.currentTimeMillis() - starttime3;
                 System.out.printf("Future taken %d milliseconds.\n", diff3);
 

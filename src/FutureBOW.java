@@ -14,7 +14,7 @@ import java.util.concurrent.*;
 import java.util.regex.Pattern;
 // import java.util.stream.Stream;
 
-public class FutureBOW {
+public class FutureBOW implements Results {
     Map<String, Integer> results;
 
     public FutureBOW(String filePath) {
@@ -88,6 +88,10 @@ public class FutureBOW {
 
         this.results = combinedWordCounts;
 
+    }
+
+    public Map<String, Integer> results() {
+        return results;
     }
 
     static class WordCountTask {

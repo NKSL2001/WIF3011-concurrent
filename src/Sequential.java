@@ -3,7 +3,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.regex.Pattern;
 
-public class Sequential {
+public class Sequential implements Results {
     Map<String, Integer> results;
 
     public Sequential(String filePath) throws IOException {
@@ -40,5 +40,9 @@ public class Sequential {
 
         // store count results
         this.results = counts;
+    }
+
+    public Map<String, Integer> results() {
+        return this.results;
     }
 }
