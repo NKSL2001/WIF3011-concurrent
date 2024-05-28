@@ -33,10 +33,8 @@ public class App {
                 System.out.printf("Runnable taken %d milliseconds.\n", diff2);
 
                 // Concurrent #2: via Future
-                int chunkSize = 32768;
-
                 long starttime3 = System.currentTimeMillis();
-                FutureBOW futureResult = new FutureBOW(filePath, chunkSize);
+                FutureBOW futureResult = new FutureBOW(filePath);
                 long diff3 = System.currentTimeMillis() - starttime3;
                 System.out.printf("Future taken %d milliseconds.\n", diff3);
 

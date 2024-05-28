@@ -17,6 +17,10 @@ import java.util.regex.Pattern;
 public class FutureBOW {
     Map<String, Integer> results;
 
+    public FutureBOW(String filePath) {
+        this(filePath, 16384);
+    }
+
     public FutureBOW(String filePath, int chunkSize) {
 
         // Create a map to hold the combined word counts
@@ -157,8 +161,7 @@ public class FutureBOW {
 
                 // Count word occurrences
                 // break at chunkBoundaryCondition because to ensure removing the correct first word
-                List<String> splitted = Arrays.asList(
-                        content.toString().split(chunkBoundaryCondition))
+                List<String> splitted = Arrays.asList(content.split(chunkBoundaryCondition))
                         .stream()
                         .map(string -> string.toLowerCase())
                         .toList();
