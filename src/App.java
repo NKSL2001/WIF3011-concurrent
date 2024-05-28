@@ -9,12 +9,14 @@ public class App {
         //String filePath = "test text.txt";
         String[] filePaths = {
                 "10kb_largetextfile.txt",
+                "50kb_largetextfile.txt",
                 "100kb_largetextfile.txt",
                 "500kb_largetextfile.txt",
                 "1mb_largetextfile.txt",
                 "5mb_largetextfile.txt",
                 "10mb_largetextfile.txt",
-                "30mb_largetextfile.txt",
+                "50mb_largetextfile.txt",
+                "100mb_largetextfile.txt",
         };
 
         int numberOfAvgLoop = 3;
