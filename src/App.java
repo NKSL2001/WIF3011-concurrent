@@ -16,8 +16,8 @@ public class App {
 
         for (String filePath : filePaths) {
             long sum1=0;
+            long sum2=0;
             long sum3=0;
-            long sum4=0;
 
             for (int i = 0; i < 3; i++) {
                 // Sequential
@@ -27,10 +27,10 @@ public class App {
                 System.out.printf("Sequential taken %d milliseconds.\n", diff);
 
                 // Concurrent #1: Runnable 2.0
-                long starttime4 = System.currentTimeMillis();
+                long starttime2 = System.currentTimeMillis();
                 RunnableBOW runnableResult = new RunnableBOW(filePath);
-                long diff4 = System.currentTimeMillis() - starttime4;
-                System.out.printf("Runnable 2.0 taken %d milliseconds.\n", diff4);
+                long diff2 = System.currentTimeMillis() - starttime2;
+                System.out.printf("Runnable taken %d milliseconds.\n", diff2);
 
                 // Concurrent #2: via Future
                 int chunkSize = 32768;
@@ -41,16 +41,17 @@ public class App {
                 System.out.printf("Future taken %d milliseconds.\n", diff3);
 
                 sum1 += diff;
+                sum2 += diff2;
                 sum3 += diff3;
-                sum4 += diff4;
+                
             }
 
             System.out.println("===================================");
             System.out.println("======="+filePath+"========");
 
             System.out.println("Sequential average time: "+ sum1/3 +" milliseconds");
+            System.out.println("Runnable average time: "+ sum2/3 +" milliseconds");
             System.out.println("Future average time: "+ sum3/3 +" milliseconds");
-            System.out.println("Runnable 2.0 average time: "+ sum4/3 +" milliseconds");
 
             System.out.println("===================================");
             System.out.println("");
