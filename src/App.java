@@ -3,6 +3,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class App {
     public static void main(String[] args) throws Exception {
+        SystemInfo systemInfo = new SystemInfo();
+        System.out.println(systemInfo);
+
         //String filePath = "test text.txt";
         String[] filePaths = {
                 "10kb_largetextfile.txt",
