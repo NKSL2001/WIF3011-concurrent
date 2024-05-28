@@ -66,7 +66,7 @@ public class App {
             System.out.println("===================================");
             System.out.println("");
             
-            resultTimeJson += String.format("\"%s\": {\"sequential\":\"%d\",\"runnable\":\"%d\",\"future\":\"%d\"},", 
+            resultTimeJson += String.format("\"%s\": {\"sequential\":%d,\"runnable\":%d,\"future\":%d},", 
                 filePath.split("_")[0],
                 sum1/numberOfAvgLoop,
                 sum2/numberOfAvgLoop,
