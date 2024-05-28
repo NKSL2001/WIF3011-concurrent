@@ -1,12 +1,7 @@
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-// ArrayList, List
 public class App {
-
-    static volatile List<String> processed = new ArrayList<>();
-    static AtomicBoolean isReading = new AtomicBoolean(true);
-
     public static void main(String[] args) throws Exception {
         App app = new App(); // for Runnable 2.0 synchronized monitor
 
