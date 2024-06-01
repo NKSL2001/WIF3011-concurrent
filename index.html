@@ -1,90 +1,355 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>Hello World Project</title>
+        <title>WIF3011 Group Project</title>
+        <style>
+            h1 {
+                text-align: center;
+            }
 
-        <!-- jQuery library -->
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script>
-        <!-- JS chart library -->
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.5.1/chart.min.js"></script>
+            .display {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .display .result {
+                max-width: 100%;
+            }
+
+            .display .result .details {
+                padding-block-end: 1em;
+            }
+
+            .display .result p {
+                line-height: 1.2;
+                margin: 0;
+                padding: 0;
+            }
+
+            .display .charts {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                max-width: 49%;
+            }
+
+            .display #localtest {
+                grid-column: 1/span 2;
+            }
+
+            .status {
+                padding: 6px;
+                font-weight: bold;
+            }
+            .running {
+                background-color: yellow;
+            }
+            .completed {
+                background-color: lime;
+            }
+            .failed {
+                background-color: red;
+            }
+
+            body ul > li:nth-child(5) {
+                font-style: italic;
+            }
+
+            .bow {
+                display: grid;
+                grid-template-columns: 1fr 1fr 1fr;
+            }
+            .bow canvas {
+                width: 30%;
+            }
+        </style>
     </head>
     <body>
-        <h1>Hello World Project</h1>
-        <div>
-            <picture>
-                <canvas id="lineChart" style="width:100%;max-width:270px"></canvas>
-            </picture>
-            <p>Line Chart</p>
+        <h1>WIF3011 Group Project</h1>
+        <p>
+            Group members:
+            <ul>
+                <li>Koo Song Le</li>
+                <li>Alvin Bradley Nonis</li>
+                <li>Derrick Phang Hong Boon</li>
+                <li>Zhang Wei</li>
+                <li>Bade Srija</li>
+            </ul>
+        </p>
+        <div class="display">
+            <div class="result" id="result1">
+                <h3>Test Results 1</h3>
+                <div class="details">
+
+                </div>
+                <div class="charts">
+                    <canvas class="chart-small"></canvas>
+                    <canvas class="chart-large"></canvas>
+                </div>
+            </div>
+            <div class="result" id="result2">
+                <h3>Test Results 2</h3>
+                <div class="details">
+
+                </div>
+                <div class="charts">
+                    <canvas class="chart-small"></canvas>
+                    <canvas class="chart-large"></canvas>
+                </div>
+            </div>
+            <div class="result" id="result3">
+                <h3>Test Results 3</h3>
+                <div class="details">
+
+                </div>
+                <div class="charts">
+                    <canvas class="chart-small"></canvas>
+                    <canvas class="chart-large"></canvas>
+                </div>
+            </div>
+            <div class="result" id="result4">
+                <h3>Test Results 4</h3>
+                <div class="details">
+
+                </div>
+                <div class="charts">
+                    <canvas class="chart-small"></canvas>
+                    <canvas class="chart-large"></canvas>
+                </div>
+            </div>
+            
+            <div class="result" id="localtest">
+                <h3>Run real-time test <button onclick="runtest()">Start real-time test</button></h3>
+                <div class="status">
+                    No tests are running.
+                </div>
+                <div class="details">
+
+                </div>
+                <div class="charts">
+                    <canvas class="chart-small"></canvas>
+                    <canvas class="chart-large"></canvas>
+                </div>
+
+                <h4>Bag of Words result</h4>
+                <div class="bow">
+                    <canvas id="chart-sequential"></canvas>
+                    <canvas id="chart-runnable"></canvas>
+                    <canvas id="chart-future"></canvas>
+                </div>
+            </div>
         </div>
     </body>
-
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        $(document).ready(function() {
-            showGraph();
-        });
-
         const result1 = {"system_info": {"os_name":"Windows 11","os_arch":"amd64","java_version":"17.0.11","num_cpu":"12","free_mem":"256103936","max_mem":"4114612224","jvm_mem":"257949696"}, "results": {"10kb": {"sequential":3,"runnable":4,"future":11},"50kb": {"sequential":7,"runnable":8,"future":18},"100kb": {"sequential":20,"runnable":17,"future":24},"500kb": {"sequential":40,"runnable":24,"future":27},"1mb": {"sequential":63,"runnable":48,"future":31},"5mb": {"sequential":298,"runnable":178,"future":164},"10mb": {"sequential":654,"runnable":336,"future":299},"50mb": {"sequential":3717,"runnable":2160,"future":1461},"100mb": {"sequential":5897,"runnable":3046,"future":2503}}};
         const result2 = {"system_info": {"os_name":"Windows 10","os_arch":"amd64","java_version":"16.0.1","num_cpu":"4","free_mem":"400303424","max_mem":"6417285120","jvm_mem":"402653184"}, "results": {"10kb": {"sequential":6,"runnable":10,"future":7},"50kb": {"sequential":13,"runnable":35,"future":41},"100kb": {"sequential":17,"runnable":41,"future":16},"500kb": {"sequential":47,"runnable":55,"future":47},"1mb": {"sequential":93,"runnable":108,"future":49},"5mb": {"sequential":368,"runnable":379,"future":224},"10mb": {"sequential":881,"runnable":800,"future":543},"50mb": {"sequential":3983,"runnable":3546,"future":2270},"100mb": {"sequential":8535,"runnable":7837,"future":4556}}};
         const result3 = {"system_info": {"os_name":"Windows 10","os_arch":"amd64","java_version":"17.0.3.1","num_cpu":"12","free_mem":"396780872","max_mem":"6371147776","jvm_mem":"398458880"}, "results": {"10kb": {"sequential":5,"runnable":3,"future":9},"50kb": {"sequential":16,"runnable":40,"future":15},"100kb": {"sequential":19,"runnable":45,"future":17},"500kb": {"sequential":70,"runnable":74,"future":50},"1mb": {"sequential":88,"runnable":61,"future":69},"5mb": {"sequential":374,"runnable":299,"future":246},"10mb": {"sequential":837,"runnable":355,"future":433},"50mb": {"sequential":2322,"runnable":1023,"future":1262},"100mb": {"sequential":5282,"runnable":2504,"future":2845}}};
         const result4 = {"system_info": {"os_name":"Windows 10","os_arch":"amd64","java_version":"17.0.10","num_cpu":"12","free_mem":"130587576","max_mem":"2107637760","jvm_mem":"132120576"}, "results": {"10kb": {"sequential":3,"runnable":4,"future":8},"50kb": {"sequential":7,"runnable":5,"future":12},"100kb": {"sequential":12,"runnable":9,"future":10},"500kb": {"sequential":40,"runnable":17,"future":36},"1mb": {"sequential":73,"runnable":36,"future":52},"5mb": {"sequential":331,"runnable":158,"future":161},"10mb": {"sequential":687,"runnable":296,"future":355},"50mb": {"sequential":3067,"runnable":1391,"future":1458},"100mb": {"sequential":6268,"runnable":2806,"future":2750}}};
-        // attempt at converting data object to array
-        // const result = {result1, result2, result3, result4};
-        // const testing = dig(result1, '1mb');
 
-        // function dig(obj, target) {
-        //     target in obj
-        //         ? obj[target]
-        //         : Object.values(obj).reduce((acc, val) => {
-        //             if (acc !== undefined) return acc;
-        //             if (typeof val === 'object') return dig(val, target);
-        //         }, undefined);
-        // };
+        function reverse2DObject(object) {
+            return Object.assign(
+                ...Object.keys(object[Object.keys(object)[0]])
+                .map((col) => {
+                    return {
+                        [col]: 
+                        Object.assign(
+                            ...Object.entries(object).map(
+                                ([row, rowvals]) => ({[row]: rowvals[col]})
+                            )
+                        )
+                    }
+                })
+            )
+        }
 
-        // chart library
-        const showGraph = () => {
-            // debugging
-            // console.log(result);
-            // console.log(result1.results['1mb'].sequential);
-            // console.log(testing);
+        function drawChart(result, displayDiv) {
+            let chart_small = displayDiv.getElementsByClassName("chart-small")[0];
+            let chart_large = displayDiv.getElementsByClassName("chart-large")[0];
 
-            // line chart
-            new Chart("lineChart", {
+            // small file size chart
+            new Chart(chart_small, {
                 type: 'line',
                 data: {
-                    labels: ['a', 'b', 'c', 'd'],
-                    datasets: 
-                    [
+                    labels: ['10KB', '50KB', '100KB', '500KB', '1MB'],
+                    datasets: [
                         {
-                        label: 'apple',
-                        borderColor: ['red'],
-                        backgroundColor: ['red'],
-                        data: [2, 4, 6, 8] // y axis
+                            label: 'Sequential',
+                            data: Object.values(result['sequential']).slice(0, 5),
+                            borderColor: 'red',
+                            fill: false
                         },
                         {
-                        label: 'orange',
-                        borderColor: ['orange'],
-                        backgroundColor: ['orange'],
-                        data: [8, 6, 4, 2] // y axis
+                            label: 'Runnable',
+                            data: Object.values(result['runnable']).slice(0, 5),
+                            borderColor: 'blue',
+                            fill: false
+                        },
+                        {
+                            label: 'Future',
+                            data: Object.values(result['future']).slice(0, 5),
+                            borderColor: 'green',
+                            fill: false
                         }
-                    ]   
+                    ]
                 },
                 options: {
+                    aspectRatio: 1,
                     scales: {
-                        x: {
-                            title: {
-                                display: true,
-                                text: 'filesize'
-                            }
-                        },
                         y: {
+                            beginAtZero: true,
                             title: {
                                 display: true,
-                                text: 'time taken'
+                                text: "Time (ms)",
+                                align: 'end'
                             }
                         }
-                    },
+                    }
                 }
-            });
+            })
+
+            // large file size chart
+            new Chart(chart_large, {
+                type: 'line',
+                data: {
+                    labels: ['1MB', '5MB', '10MB', '50MB', '100MB'],
+                    datasets: [
+                        {
+                            label: 'Sequential',
+                            data: Object.values(result['sequential']).slice(4, 10),
+                            borderColor: 'red',
+                            fill: false
+                        },
+                        {
+                            label: 'Runnable',
+                            data: Object.values(result['runnable']).slice(4, 10),
+                            borderColor: 'blue',
+                            fill: false
+                        },
+                        {
+                            label: 'Future',
+                            data: Object.values(result['future']).slice(4, 10),
+                            borderColor: 'green',
+                            fill: false
+                        }
+                    ]
+                },
+                options: {
+                    aspectRatio: 1,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: "Time (ms)",
+                                align: 'end'
+                            }
+                        }
+                    }
+                }
+            })
+        }
+
+        function displaySystemInfo(system_info, detailsDiv) {
+            let systemInfoDisplayName = {
+                "os_name": "Operating System",
+                "os_arch": "Operating System Architecture",
+                "java_version": "Java Version",
+                "num_cpu": "Number of CPUs",
+                "free_mem": "Free Memory",
+                "max_mem": "Max Memory",
+                "jvm_mem": "JVM Memory"
+            }
+
+            for ([key, val] of Object.entries(system_info)) {
+                let p = document.createElement("p");
+                if (key.endsWith("mem")) {
+                    memInMb = parseInt(val) / 1024 / 1024;
+                    val = `${Math.round(memInMb * 100) / 100} MB`;
+                }
+                p.innerHTML = `${systemInfoDisplayName[key]}: ${val}`;
+                detailsDiv.appendChild(p);
+            }
+        }
+
+        function displayBowResult(result){
+            console.log(result)
+            for (type of ['sequential', 'runnable', 'future']) {
+                let chart = document.getElementById(`chart-${type}`);
+                new Chart(chart, {
+                    type: 'bar',
+                    data: {
+                        labels: Object.keys(result[type]),
+                        datasets: [
+                            {
+                                label: 'Word',
+                                data: Object.values(result[type]),
+                                backgroundColor: 'blue'
+                            }
+                        ]
+                    },
+                    options: {
+                        aspectRatio: 1,
+                        scales: {
+                            y: {
+                                title: {
+                                    display: true,
+                                    text: "Count",
+                                    align: 'end'
+                                }
+                            }
+                        }
+                    }
+                })
+            }
+        }
+
+        for (id of ["result1", "result2", "result3", "result4"]) {
+            let result = eval(id);
+
+            let timeresult = result.results;
+            let transponsedTime =  reverse2DObject(timeresult);
+            
+            drawChart(transponsedTime, document.getElementById(id));
+            displaySystemInfo(result.system_info, document.getElementById(id).getElementsByClassName("details")[0]);
+        }
+
+        function runtest(){
+            const displayOrder = ['10kb', '50kb', '100kb', '500kb', '1mb', '5mb', '10mb', '50mb', '100mb'];
+            let statusdiv = document.getElementById("localtest").getElementsByClassName("status")[0];
+            statusdiv.innerHTML = "Running test...";
+            statusdiv.classList = [];
+            statusdiv.classList.add("status");
+            statusdiv.classList.add("running");
+            
+            fetch(
+                "/project/runtest",
+                {
+                    headers: {
+                        "Content-Type": "application/json"
+                    }
+                }
+            ).then(
+                (res) => res.json()
+            ).then(
+                (result) => {
+                    statusdiv.innerHTML = "Test completed.";
+                    statusdiv.classList.remove("running");
+                    statusdiv.classList.add("completed");
+
+                    let timeresult = Object.fromEntries(displayOrder.map((key) => [key, result.results[key]]));
+                    let transponsedTime = reverse2DObject(timeresult);
+                    
+                    drawChart(transponsedTime, document.getElementById("localtest"));
+                    displaySystemInfo(result.system_info, document.getElementById("localtest").getElementsByClassName("details")[0]);
+                    displayBowResult(result['bow_1mb']);
+                }
+            ).catch(
+                (err) => {
+                    statusdiv.innerHTML = "Test failed.";
+                    statusdiv.classList.remove("running");
+                    statusdiv.classList.add("failed");
+                }
+            )
         }
     </script>
 </html>
