@@ -1,4 +1,3 @@
-/*
 import java.io.*;
 import jakarta.servlet.*;
 import jakarta.servlet.annotation.WebServlet;
@@ -19,4 +18,4 @@ public class HelloWorldServlet extends HttpServlet {
         out.close(); 
         
     } 
-}*/
+}
