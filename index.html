@@ -50,10 +50,6 @@
                 background-color: red;
             }
 
-            body ul > li:nth-child(5) {
-                font-style: italic;
-            }
-
             .bow {
                 display: grid;
                 grid-template-columns: 1fr 1fr 1fr;
@@ -72,8 +68,8 @@
                 <li>Alvin Bradley Nonis</li>
                 <li>Derrick Phang Hong Boon</li>
                 <li>Zhang Wei</li>
-                <li>Bade Srija</li>
             </ul>
+            Test results are displayed below. Lower time is better.
         </p>
         <div class="display">
             <div class="result" id="result1">
@@ -132,9 +128,21 @@
 
                 <h4>Bag of Words result</h4>
                 <div class="bow">
-                    <canvas id="chart-sequential"></canvas>
-                    <canvas id="chart-runnable"></canvas>
-                    <canvas id="chart-future"></canvas>
+                    <div>
+                        <p>Sequential</p>
+                        <canvas id="chart-sequential"></canvas>
+                        <ul id="list-sequential"></ul>
+                    </div>
+                    <div>
+                        <p>Runnable <i><small id="check-runnable">Is equal with Sequential? </small></i></p>
+                        <canvas id="chart-runnable"></canvas>
+                        <ul id="list-runnable"></ul>
+                    </div>
+                    <div>
+                        <p>Future <i><small id="check-future">Is equal with Sequential? </small></i></p>
+                        <canvas id="chart-future"></canvas>
+                        <ul id="list-future"></ul>
+                    </div>
                 </div>
             </div>
         </div>
@@ -271,18 +279,43 @@
             }
         }
 
+        function sortBowList(list) {
+            return Object.entries(list)
+                            .sort((a, b) => 
+                                b[1] - a[1] || a[0].localeCompare(b[0])
+                            );
+        }
+
         function displayBowResult(result){
-            console.log(result)
             for (type of ['sequential', 'runnable', 'future']) {
+                // sort word count from largest to smallest
+                let sortedlist = sortBowList(result[type]);
+
+                // check if the word count is the same
+                if (type != 'sequential') {
+                    let check = document.getElementById(`check-${type}`);
+                    let checkText = JSON.stringify(sortedlist) == JSON.stringify(sortBowList(result['sequential'])) ? 'Yes' : 'No';
+                    check.innerHTML = `Is equal with Sequential? ${checkText}`;
+                }
+
+                // display word count as text list
+                let list = document.getElementById(`list-${type}`);
+                let htmlStr = "";
+                for (let [word, count] of sortedlist) {
+                    htmlStr += `<li>${word}: ${count}</li>`;
+                }
+                list.innerHTML = htmlStr;
+
+                // show word count chart
                 let chart = document.getElementById(`chart-${type}`);
                 new Chart(chart, {
                     type: 'bar',
                     data: {
-                        labels: Object.keys(result[type]),
+                        labels: sortedlist.map((val) => val[0]),
                         datasets: [
                             {
                                 label: 'Word',
-                                data: Object.values(result[type]),
+                                data: sortedlist.map((val) => val[1]),
                                 backgroundColor: 'blue'
                             }
                         ]
@@ -336,7 +369,7 @@
                     statusdiv.classList.remove("running");
                     statusdiv.classList.add("completed");
 
-                    let timeresult = Object.fromEntries(displayOrder.map((key) => [key, result.results[key]]));
+                    let timeresult = result.results//Object.fromEntries(displayOrder.map((key) => [key, result.results[key]]));
                     let transponsedTime = reverse2DObject(timeresult);
                     
                     drawChart(transponsedTime, document.getElementById("localtest"));

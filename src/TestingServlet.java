@@ -1,5 +1,5 @@
 import java.io.*;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import jakarta.servlet.*;
@@ -27,7 +27,7 @@ public class TestingServlet extends HttpServlet {
         };
 
         int numberOfAvgLoop = 3;
-        Map<String, Map<String, Number>> resultTime = new HashMap<>();
+        Map<String, Map<String, Number>> resultTime = new LinkedHashMap<>();
 
         for (String filePath : filePaths) {
             String onDiskPath = getServletContext().getRealPath("/") + filePath;
@@ -56,7 +56,7 @@ public class TestingServlet extends HttpServlet {
                 sum3 += diff3;
             }
             
-            Map<String, Number> timeMap = new HashMap<>();
+            Map<String, Number> timeMap = new LinkedHashMap<>();
             timeMap.put("sequential", sum1/numberOfAvgLoop);
             timeMap.put("runnable", sum2/numberOfAvgLoop);
             timeMap.put("future", sum3/numberOfAvgLoop);
@@ -66,7 +66,7 @@ public class TestingServlet extends HttpServlet {
         SystemInfo systemInfo = new SystemInfo();
         
         // BOW result to ensure the result is correct
-        Map<String, Map<String, Integer>> countResult = new HashMap<>();
+        Map<String, Map<String, Integer>> countResult = new LinkedHashMap<>();
         String onDiskPath = getServletContext().getRealPath("/") + "1mb_largetextfile.txt";
         
         Results sequentialResult = new Sequential(onDiskPath);
