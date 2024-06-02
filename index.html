@@ -355,7 +355,7 @@
             statusdiv.classList.add("running");
             
             fetch(
-                "/project/runtest",
+                window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/')) + "/runtest",
                 {
                     headers: {
                         "Content-Type": "application/json"
